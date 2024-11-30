@@ -19,4 +19,4 @@ const logger: Logger = (fn) => (data) => {
   console.log('Part 2:', part2);
 };
 
-Bun.file(`src/${padded}/${mode}.txt`).text().then(logger(runner));
+Bun.file(`src/days/${padded}/${mode}.txt`).text().then(logger(runner));

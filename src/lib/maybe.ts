@@ -12,13 +12,22 @@ interface Nothing {
   _tag: MaybeType.Nothing;
 }
 
-export type Maybe<T> = Just<T> | Nothing;
+export type Maybe<T = unknown> = Just<T> | Nothing;
 
-const nothing = (): Nothing => ({
+export const Nothing = (): Nothing => ({
   _tag: MaybeType.Nothing,
 });
 
-const just = <T>(value: T): Just<T> => ({
+export const Just = <T>(value: T): Just<T> => ({
   _tag: MaybeType.Just,
   value,
 });
+
+export const isJust = <T>(value: Maybe<T>): value is Just<T> => value._tag === MaybeType.Just;
+export const isNothing = <T>(value: Maybe<T>): value is Nothing => value._tag === MaybeType.Nothing;
+
+export const maybe =
+  <T, R>(defaultValue: T) =>
+  (fn: (arg: T) => R) =>
+  (value: Maybe<T>) =>
+    isNothing(value) ? defaultValue : fn(value.value);
