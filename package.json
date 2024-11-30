@@ -1,19 +1,26 @@
 {
-	"name": "aoc24",
-	"module": "index.ts",
-	"type": "module",
-	"scripts": {
-		"lint": "eslint src"
-	},
-	"devDependencies": {
-		"@eslint/js": "^9.15.0",
-		"@types/bun": "latest",
-		"eslint": "^9.15.0",
-		"eslint-plugin-functional": "^7.1.0",
-		"globals": "^15.12.0",
-		"typescript-eslint": "^8.15.0"
-	},
-	"peerDependencies": {
-		"typescript": "^5.0.0"
-	}
+  "name": "aoc24",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint src",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "scaffold": "bun src/utils/scaffold.ts",
+    "day": "bun src/utils/runner.ts",
+    "today": "bun src/utils/runner.ts today"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@types/bun": "latest",
+    "eslint": "^9.15.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-functional": "^7.1.0",
+    "globals": "^15.12.0",
+    "prettier": "^3.4.1",
+    "typescript-eslint": "^8.15.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
 }
