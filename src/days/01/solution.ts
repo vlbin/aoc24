@@ -1,19 +1,24 @@
-import { sum } from '../../lib/array';
+import { map, sum, zip } from '../../lib/array';
+import { pipe } from '../../lib/pipe';
+import { split } from '../../lib/string';
+import type { Tuple } from '../../lib/types';
 
-const getLists = (data: string) =>
-  data.split('\n').reduce<number[][]>(
+const getLists = (data: string): Tuple<number[]> => {
+  return data.split('\n').reduce<Tuple<number[]>>(
     ([list1, list2], pair) => {
       const [num1, num2] = pair.split('   ').map(Number);
       return [[...list1, num1].toSorted(), [...list2, num2].toSorted()];
     },
     [[], []],
   );
-
-export const part1 = (data: string) => {
-  const [list1, list2] = getLists(data);
-
-  return sum(list1.map((el, index) => Math.abs(el - list2[index])));
 };
+
+export const part1 = pipe(
+  getLists,
+  (pairs) => zip(...pairs),
+  map(([a, b]) => Math.abs(a - b)),
+  sum,
+);
 
 export const part2 = (data: string) => {
   const [list1, list2] = getLists(data);

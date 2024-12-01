@@ -34,3 +34,5 @@ export const zip = <A, B>(as: Array<A>, bs: Array<B>) =>
   as.slice(0, Math.min(as.length, bs.length)).map((a, i) => [a, bs[i]]);
 
 export const head = <T>(items: ReadonlyArray<T>) => items[0];
+
+export const length = (items: unknown[]) => items.length;
