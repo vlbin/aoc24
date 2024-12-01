@@ -28,4 +28,9 @@ export const take =
   (items: ReadonlyArray<T>) =>
     amount >= 0 ? items.slice(0, amount) : items.slice(amount);
 
+export const sum = reduce<number, number>((acc, curr) => acc + curr, 0);
+
+export const zip = <A, B>(as: Array<A>, bs: Array<B>) =>
+  as.slice(0, Math.min(as.length, bs.length)).map((a, i) => [a, bs[i]]);
+
 export const head = <T>(items: ReadonlyArray<T>) => items[0];
