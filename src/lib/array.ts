@@ -1,3 +1,5 @@
+import { pipe } from './pipe';
+
 export const map =
   <T, R>(fn: (item: T) => R) =>
   (items: ReadonlyArray<T>): ReadonlyArray<R> =>
@@ -35,4 +37,10 @@ export const zip = <A, B>(as: Array<A>, bs: Array<B>) =>
 
 export const head = <T>(items: ReadonlyArray<T>) => items[0];
 
-export const length = (items: unknown[]) => items.length;
+export const length = <T>(items: ReadonlyArray<T>) => items.length;
+
+export const count = <T>(key: T) =>
+  pipe(
+    filter((el) => el === key),
+    length,
+  );

@@ -1,7 +1,6 @@
-import { map, sum, zip } from '../../lib/array';
-import { pipe } from '../../lib/pipe';
-import { split } from '../../lib/string';
-import type { Tuple } from '../../lib/types';
+import { pipe } from '@lib/pipe';
+import { count, filter, length, map, sum, zip } from '@lib/array';
+import type { Tuple } from '@lib/types';
 
 const getLists = (data: string): Tuple<number[]> => {
   return data.split('\n').reduce<Tuple<number[]>>(
@@ -20,15 +19,4 @@ export const part1 = pipe(
   sum,
 );
 
-export const part2 = (data: string) => {
-  const [list1, list2] = getLists(data);
-
-  const countMap: Record<number, number> = {};
-
-  return list1.reduce((acc, curr) => {
-    const count = countMap[curr] ?? list2.filter((el) => el === curr).length;
-    countMap[curr] = count;
-
-    return acc + curr * count;
-  }, 0);
-};
+export const part2 = pipe(getLists, ([list1, list2]) => list1.map((key) => key * count(key)(list2)), sum);
