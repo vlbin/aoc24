@@ -1,5 +1,5 @@
 import { deleteAt, filter, length, map, zip } from '@lib/array';
-import { parseNumbers } from '@lib/parsing';
+import { numbers } from '@lib/parsing';
 import { pipe } from '@lib/pipe';
 import { split } from '@lib/string';
 
@@ -14,9 +14,9 @@ const isValid = (report: number[]): boolean =>
 const isValidRecurse = (report: number[], sliceIndex = -1): boolean =>
   sliceIndex > report.length - 1
     ? false
-    : isValid(deleteAt(sliceIndex)(report)) || isValidRecurse(report, sliceIndex + 1);
+    : isValid(report.toSpliced(sliceIndex, 1)) || isValidRecurse(report, sliceIndex + 1);
 
-const parse = pipe(split('\n'), map(parseNumbers(' ')));
+const parse = pipe(split('\n'), map(numbers));
 
 export const part1 = pipe(parse, filter(isValid), length);
 
