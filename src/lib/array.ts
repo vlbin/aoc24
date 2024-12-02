@@ -35,9 +35,15 @@ export const sum = reduce<number, number>((acc, curr) => acc + curr, 0);
 export const zip = <A, B>(as: Array<A>, bs: Array<B>) =>
   as.slice(0, Math.min(as.length, bs.length)).map((a, i) => [a, bs[i]]);
 
+export const pairs = <A>(as: Array<A>) => as.slice(1).map((a, i) => [as[i], a]);
+
 export const head = <T>(items: ReadonlyArray<T>) => items[0];
 
 export const length = <T>(items: ReadonlyArray<T>) => items.length;
+
+export const tail = <T>([_, ...rest]: ReadonlyArray<T>) => rest;
+
+export const range = (start: number, end: number) => Array.from({ length: end - start }, (_, i) => start + i);
 
 export const count = <T>(key: T) =>
   pipe(
