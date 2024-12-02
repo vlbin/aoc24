@@ -1,23 +1,27 @@
-import { zip } from '@lib/array';
+import { deleteAt, filter, length, map, zip } from '@lib/array';
+import { parseNumbers } from '@lib/parsing';
+import { pipe } from '@lib/pipe';
+import { split } from '@lib/string';
 
-const isValid = (report: number[]): boolean => {
-  const isIncreasing = report[1] - report[0] > 0;
-  const pairs = isIncreasing ? zip([null, ...report], report) : zip(report, [null, ...report]);
+const isIncreasing = ([a, b]: number[]) => b - a > 0;
 
-  return pairs.every(([a, b]) => b === null || a === null || (b - a > 0 && b - a <= 3));
-};
+const createPairs = (report: number[]) =>
+  isIncreasing(report) ? zip([null, ...report], report) : zip(report, [null, ...report]);
+
+const isValid = (report: number[]): boolean =>
+  createPairs(report).every(([a, b]) => b === null || a === null || (b - a > 0 && b - a <= 3));
 
 const isValidRecurse = (report: number[], sliceIndex = -1): boolean =>
   sliceIndex > report.length - 1
     ? false
-    : isValid(report.filter((_, i) => i !== sliceIndex)) || isValidRecurse(report, sliceIndex + 1);
+    : isValid(deleteAt(sliceIndex)(report)) || isValidRecurse(report, sliceIndex + 1);
 
-export const part1 = (data: string) => {
-  const reports = data.split('\n').map((line) => line.split(' ').map(Number));
-  return reports.filter((report) => isValid(report)).length;
-};
+const parse = pipe(split('\n'), map(parseNumbers(' ')));
 
-export const part2 = (data: string) => {
-  const reports = data.split('\n').map((line) => line.split(' ').map(Number));
-  return reports.filter((report) => isValidRecurse(report)).length;
-};
+export const part1 = pipe(parse, filter(isValid), length);
+
+export const part2 = pipe(
+  parse,
+  filter((report) => isValidRecurse(report)),
+  length,
+);

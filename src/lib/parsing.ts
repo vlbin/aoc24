@@ -1,0 +1,1 @@
+export const parseNumbers = (separator: string) => (line: string) => line.split(separator).map(Number);

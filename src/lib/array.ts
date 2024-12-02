@@ -44,3 +44,7 @@ export const count = <T>(key: T) =>
     filter((el) => el === key),
     length,
   );
+
+export const deleteAt =
+  (index: number) =>
+  <T>(items: ReadonlyArray<T>) => [...items.slice(0, index), ...items.slice(index + 1)];
