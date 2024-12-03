@@ -24,14 +24,34 @@ const parseMul = (startIndex: number, seq: string, muls: string[]): [string[], s
 
 const parseMuls = (muls: string[], seq: string): string[] => {
   const nextMul = findStart('mul(')(seq);
-
   return nextMul > -1 ? parseMuls(...parseMul(nextMul, seq, muls)) : muls;
 };
 
-const parseProgram = (isEnabled: boolean, muls: string[], seq: string) => {
-  return isEnabled ? {} : {};
+const parseMulsWithInterrupt = (
+  muls: string[],
+  seq: string,
+  isEnabled: boolean,
+  interruptor: string,
+  resetter: string,
+): string[] => {
+  const nextMul = findStart('mul(')(seq);
+  const nextInt = interruptor ? findStart(interruptor)(seq) : -1;
+
+  const hasNextInt = nextInt > -1 && nextInt < nextMul;
+
+  return hasNextInt
+    ? parseMulsWithInterrupt(muls, seq.slice(nextInt + interruptor.length), !isEnabled, resetter, interruptor)
+    : nextMul > -1
+      ? isEnabled
+        ? parseMulsWithInterrupt(...parseMul(nextMul, seq, muls), isEnabled, interruptor, resetter)
+        : parseMulsWithInterrupt(muls, parseMul(nextMul, seq, muls)[1], isEnabled, interruptor, resetter)
+      : muls;
+};
+
+const parseProgram = (seq: string) => {
+  return parseMulsWithInterrupt([], seq, true, "don't()", 'do()').reduce((acc, curr) => acc + evalMul(curr), 0);
 };
 
 export const part1 = (data: string) => parseMuls([], data).reduce((acc, curr) => acc + evalMul(curr), 0);
 
-export const part2 = (data: string) => {};
+export const part2 = (data: string) => parseProgram(data);
