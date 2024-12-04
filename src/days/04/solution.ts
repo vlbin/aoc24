@@ -1,6 +1,4 @@
-const reverse = (arg: string) => {
-  return arg.split('').toReversed().join('');
-};
+const reverse = (arg: string) => arg.split('').toReversed().join('');
 
 const columns = (data: string[]) =>
   data.reduce(
@@ -8,9 +6,11 @@ const columns = (data: string[]) =>
     Array.from({ length: data[0].length }, () => ''),
   );
 
-const diagonal = (data: string[], colIndex: number) => {
-  return [data[0][colIndex], data[1][colIndex + 1], data[2][colIndex + 2], data[3][colIndex + 3]].join('');
-};
+const diagonalForward = (data: string[], colIndex: number) =>
+  [data[0][colIndex], data[1][colIndex + 1], data[2][colIndex + 2], data[3][colIndex + 3]].join('');
+
+const diagonalBackward = (data: string[], colIndex: number) =>
+  [data[0][colIndex + 3], data[1][colIndex + 2], data[2][colIndex + 1], data[3][colIndex]].join('');
 
 const occurences = (line: string) => (word: string) =>
   line.split('').reduce((count, _, i, letters) => {
@@ -20,23 +20,21 @@ const occurences = (line: string) => (word: string) =>
   }, 0);
 
 const searchLines = (lines: string[]) => (word: string) =>
-  lines.reduce((count, line) => {
-    // console.log(line, occurences(line)(word));
-
-    return count + occurences(line)(word);
-  }, 0);
+  lines.reduce((count, line) => count + occurences(line)(word), 0);
 
 export const part1 = (data: string) => {
   const rows = data.split('\n');
 
   const diags = rows.reduce<string[]>((diags, row, rowIndex) => {
-    return rowIndex + 4 >= rows.length
+    return rowIndex + 4 > rows.length
       ? diags
       : diags.concat(
           ...row
             .split('')
-            .map((_, colIndex) => diagonal(rows.slice(rowIndex, rowIndex + 4), colIndex))
-            .filter((diag) => diag.length >= 4),
+            .flatMap((_, colIndex) => [
+              diagonalForward(rows.slice(rowIndex, rowIndex + 4), colIndex),
+              diagonalBackward(rows.slice(rowIndex, rowIndex + 4), colIndex),
+            ]),
         );
   }, []);
 
