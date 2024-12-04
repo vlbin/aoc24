@@ -1,3 +1,5 @@
+import { range } from '@lib/array';
+
 const reverse = (arg: string) => arg.split('').toReversed().join('');
 
 const columns = (data: string[]) =>
@@ -6,11 +8,15 @@ const columns = (data: string[]) =>
     Array.from({ length: data[0].length }, () => ''),
   );
 
-const diagonalForward = (data: string[], colIndex: number) =>
-  [data[0][colIndex], data[1][colIndex + 1], data[2][colIndex + 2], data[3][colIndex + 3]].join('');
+const diagonalForward = (data: string[], colIndex: number, length: number) =>
+  range(0, length)
+    .map((i) => data[i][colIndex + i])
+    .join('');
 
-const diagonalBackward = (data: string[], colIndex: number) =>
-  [data[0][colIndex + 3], data[1][colIndex + 2], data[2][colIndex + 1], data[3][colIndex]].join('');
+const diagonalBackward = (data: string[], colIndex: number, length: number) =>
+  range(0, length)
+    .map((i) => data[i][colIndex - i])
+    .join('');
 
 const occurences = (line: string) => (word: string) =>
   line.split('').reduce((count, _, i, letters) => {
@@ -32,8 +38,8 @@ export const part1 = (data: string) => {
           ...row
             .split('')
             .flatMap((_, colIndex) => [
-              diagonalForward(rows.slice(rowIndex, rowIndex + 4), colIndex),
-              diagonalBackward(rows.slice(rowIndex, rowIndex + 4), colIndex),
+              diagonalForward(rows.slice(rowIndex, rowIndex + 4), colIndex, 4),
+              diagonalBackward(rows.slice(rowIndex, rowIndex + 4), colIndex, 4),
             ]),
         );
   }, []);
@@ -43,4 +49,27 @@ export const part1 = (data: string) => {
   return searchLines([...rows, ...columns(rows)])('XMAS') + diagCount;
 };
 
-export const part2 = (data: string) => {};
+export const part2 = (data: string) => {
+  const rows = data.split('\n');
+
+  return rows.reduce((count, row, rowIndex) => {
+    const as = (
+      row
+        .split('')
+        .map((el, colIndex) => (el === 'A' ? [rowIndex, colIndex] : null))
+        .filter(Boolean) as Array<[number, number]>
+    ).filter(
+      ([rowIndex, colIndex]) => rowIndex > 0 && colIndex > 0 && rowIndex < rows.length - 1 && colIndex < row.length - 1,
+    );
+
+    return (
+      count +
+      as.filter(([rowIndex, colIndex]) => {
+        const forward = diagonalForward(rows.slice(rowIndex - 1, rowIndex + 2), colIndex - 1, 3);
+        const backward = diagonalBackward(rows.slice(rowIndex - 1, rowIndex + 2), colIndex + 1, 3);
+
+        return ['MAS', 'SAM'].includes(forward) && ['MAS', 'SAM'].includes(backward);
+      }).length
+    );
+  }, 0);
+};
