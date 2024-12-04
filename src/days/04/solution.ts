@@ -1,4 +1,6 @@
-import { range } from '@lib/array';
+import { map, range } from '@lib/array';
+import { pipe } from '@lib/pipe';
+import { split } from '@lib/string';
 
 const reverse = (arg: string) => arg.split('').toReversed().join('');
 
@@ -49,26 +51,18 @@ export const part1 = (data: string) => {
   return searchLines([...rows, ...columns(rows)])('XMAS') + diagCount;
 };
 
+const checkWord = (word: string) => ['MAS', 'SAM'].includes(word);
+
 export const part2 = (data: string) => {
-  const rows = data.split('\n');
+  const matrix = pipe(split('\n'), map(split('')))(data);
 
-  return rows.reduce((count, row, rowIndex) => {
-    const as = (
-      row
-        .split('')
-        .map((el, colIndex) => (el === 'A' ? [rowIndex, colIndex] : null))
-        .filter(Boolean) as Array<[number, number]>
-    ).filter(
-      ([rowIndex, colIndex]) => rowIndex > 0 && colIndex > 0 && rowIndex < rows.length - 1 && colIndex < row.length - 1,
-    );
+  const as = matrix
+    .flatMap((line, ri) => line.map((el, ci) => (el === 'A' ? [ri, ci] : [-1, -1])))
+    .filter(([ri, ci]) => ri > 0 && ci > 0 && ri < matrix.length - 1 && ci < matrix[0].length - 1);
 
-    return (
-      count +
-      as.filter(([rowIndex, colIndex]) => {
-        const forward = diagonalForward(rows.slice(rowIndex - 1, rowIndex + 2), colIndex - 1, 3);
-        const backward = diagonalBackward(rows.slice(rowIndex - 1, rowIndex + 2), colIndex + 1, 3);
-        return [forward, backward].every((diag) => ['MAS', 'SAM'].includes(diag));
-      }).length
-    );
-  }, 0);
+  return as.filter(
+    ([ri, ci]) =>
+      checkWord(`${matrix[ri - 1][ci - 1]}${matrix[ri][ci]}${matrix[ri + 1][ci + 1]}`) &&
+      checkWord(`${matrix[ri - 1][ci + 1]}${matrix[ri][ci]}${matrix[ri + 1][ci - 1]}`),
+  ).length;
 };
