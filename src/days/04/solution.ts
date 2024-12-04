@@ -67,8 +67,7 @@ export const part2 = (data: string) => {
       as.filter(([rowIndex, colIndex]) => {
         const forward = diagonalForward(rows.slice(rowIndex - 1, rowIndex + 2), colIndex - 1, 3);
         const backward = diagonalBackward(rows.slice(rowIndex - 1, rowIndex + 2), colIndex + 1, 3);
-
-        return ['MAS', 'SAM'].includes(forward) && ['MAS', 'SAM'].includes(backward);
+        return [forward, backward].every((diag) => ['MAS', 'SAM'].includes(diag));
       }).length
     );
   }, 0);
