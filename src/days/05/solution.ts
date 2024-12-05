@@ -4,21 +4,12 @@ export const getRules = (_rules: string) =>
   _rules
     .split('\n')
     .map((line) => line.split('|').map(Number))
-    .reduce<{ before: Record<number, number[]>; after: Record<number, number[]> }>(
-      (reqs, [a, b]) => {
-        return {
-          before: {
-            ...reqs.before,
-            [b]: (reqs.before[b] || []).concat(a),
-          },
-          after: {
-            ...reqs.after,
-            [a]: (reqs.after[a] || []).concat(b),
-          },
-        };
-      },
-      { before: {}, after: {} },
-    );
+    .reduce<Record<number, number[]>>((reqs, [a, b]) => {
+      return {
+        ...reqs,
+        [b]: (reqs[b] || []).concat(a),
+      };
+    }, {});
 
 export const part1 = (data: string) => {
   const [_rules, _updates] = data.split('\n\n');
@@ -29,7 +20,7 @@ export const part1 = (data: string) => {
 
   const valid = updates.filter((update) => {
     return update.every((el, i) => {
-      const before = rules.before[el] || [];
+      const before = rules[el] || [];
       const rest = update.slice(i);
 
       return !rest.some((elAfter) => before.includes(elAfter));
@@ -47,21 +38,20 @@ export const part2 = (data: string) => {
 
   const invalid = updates.filter((update) => {
     return update.some((el, i) => {
-      const before = rules.before[el] || [];
+      const before = rules[el] || [];
       const rest = update.slice(i);
 
       return rest.some((elAfter) => before.includes(elAfter));
     });
   });
 
-  return invalid.map((update) => {
+  const sorted = invalid.map((update) => {
     return update.toSorted((a, b) => {
-      const beforeA = rules.before[a] || [];
-      const beforeB = rules.before[b] || [];
+      const beforeA = rules[a] || [];
 
-      console.log(update, a, beforeA);
-
-      return 0;
+      return beforeA.includes(b) ? 1 : -1;
     });
   });
+
+  return sum(sorted.map((line) => line[Math.floor(line.length / 2)]));
 };
