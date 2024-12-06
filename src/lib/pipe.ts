@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type UnaryFunction<I, O> = (arg: I) => O;
 
 interface Pipe {
@@ -14,6 +15,6 @@ interface Pipe {
 }
 
 export const pipe: Pipe =
-  (...fns: UnaryFunction<any, any>[]) =>
+  (...fns: Readonly<UnaryFunction<any, any>[]>) =>
   (input: any) =>
     fns.reduce((acc, fn) => fn(acc), input);

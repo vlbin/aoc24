@@ -25,9 +25,3 @@ export const Just = <T>(value: T): Just<T> => ({
 
 export const isJust = <T>(value: Maybe<T>): value is Just<T> => value._tag === MaybeType.Just;
 export const isNothing = <T>(value: Maybe<T>): value is Nothing => value._tag === MaybeType.Nothing;
-
-export const maybe =
-  <T, R>(defaultValue: T) =>
-  (fn: (arg: T) => R) =>
-  (value: Maybe<T>) =>
-    isNothing(value) ? defaultValue : fn(value.value);

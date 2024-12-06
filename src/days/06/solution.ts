@@ -1,4 +1,6 @@
+import { updateAt } from '@lib/grid';
 import { grid } from '@lib/parsing';
+import type { Grid } from '@lib/types';
 
 const directions = {
   up: [-1, 0],
@@ -8,39 +10,42 @@ const directions = {
 } as const;
 
 type Direction = typeof directions;
+
 const nextDir: (keyof Direction)[] = ['up', 'right', 'down', 'left'];
 
-const createRecord = (currentPos: [number, number]) => currentPos.join('-');
+const getNextDir = (direction: keyof Direction) => nextDir[(nextDir.indexOf(direction) + 1) % 4];
 
-const createRecordWithDir = (currentPos: [number, number], direction: keyof Direction) =>
+const createRecord = (currentPos: Readonly<[number, number]>) => currentPos.join('-');
+
+const createRecordWithDir = (currentPos: Readonly<[number, number]>, direction: keyof Direction) =>
   [...currentPos, direction].join('-');
 
-const isLooping = (pos: [number, number], direction: keyof Direction, visited: Set<string>) =>
+const parseRecordWithDir = (record: string) => record.split('-').slice(0, 2).map(Number);
+
+const isLooping = (pos: Readonly<[number, number]>, direction: keyof Direction, visited: ReadonlySet<string>) =>
   visited.has(createRecordWithDir(pos, direction));
 
-const visit = (
-  currentPos: [number, number],
+const visitedTiles = (
+  currentPos: Readonly<[number, number]>,
   direction: keyof Direction,
-  matrix: string[][],
-  visited: Set<string>,
+  matrix: Grid<string>,
+  visited: Readonly<Set<string>>,
 ): Set<string> => {
   const [nextRow, nextCol] = [currentPos[0] + directions[direction][0], currentPos[1] + directions[direction][1]];
-  const block = matrix[nextRow]?.[nextCol];
+  const nextTile = matrix[nextRow]?.[nextCol];
 
-  return block
-    ? block === '#'
-      ? visit(currentPos, nextDir[(nextDir.indexOf(direction) + 1) % 4], matrix, visited)
-      : visit([nextRow, nextCol], direction, matrix, visited.add(createRecord(currentPos)))
-    : visited.add(createRecord(currentPos));
+  if (!nextTile) return visited.add(createRecord(currentPos));
+
+  return nextTile === '#'
+    ? visitedTiles(currentPos, getNextDir(direction), matrix, visited)
+    : visitedTiles([nextRow, nextCol], direction, matrix, visited.add(createRecord(currentPos)));
 };
 
-const matrixToString = (matrix: string[][]) => matrix.map((row) => row.join('')).join('\n');
-
-const visitLoop = (
-  currentPos: [number, number],
+const loopCount = (
+  currentPos: Readonly<[number, number]>,
   direction: keyof Direction,
-  matrix: string[][],
-  visited: Set<string>,
+  matrix: Grid<string>,
+  visited: Readonly<Set<string>>,
 ): number => {
   const [nextRow, nextCol] = [currentPos[0] + directions[direction][0], currentPos[1] + directions[direction][1]];
   const block = matrix[nextRow]?.[nextCol];
@@ -49,17 +54,19 @@ const visitLoop = (
     ? 1
     : block
       ? block === '#' || block === '0'
-        ? visitLoop(currentPos, nextDir[(nextDir.indexOf(direction) + 1) % 4], matrix, visited)
-        : visitLoop([nextRow, nextCol], direction, matrix, visited.add(createRecordWithDir(currentPos, direction)))
+        ? loopCount(currentPos, nextDir[(nextDir.indexOf(direction) + 1) % 4], matrix, visited)
+        : loopCount([nextRow, nextCol], direction, matrix, visited.add(createRecordWithDir(currentPos, direction)))
       : 0;
 };
+
+const block = (ri: number, ci: number, matrix: Grid<string>) => updateAt(ri, ci)(() => '0')(matrix);
 
 export const part1 = (data: string) => {
   const matrix = grid(data);
   const row = matrix.findIndex((row) => row.some((char) => char === '^'));
   const col = matrix[row].findIndex((char) => char === '^');
 
-  return visit([row, col], 'up', matrix, new Set()).size;
+  return visitedTiles([row, col], 'up', matrix, new Set()).size;
 };
 
 export const part2 = (data: string) => {
@@ -67,15 +74,13 @@ export const part2 = (data: string) => {
   const startRow = matrix.findIndex((row) => row.some((char) => char === '^'));
   const startCol = matrix[startRow].findIndex((char) => char === '^');
 
-  const visited = visit([startRow, startCol], 'up', matrix, new Set());
+  const visited = visitedTiles([startRow, startCol], 'up', matrix, new Set());
   const visitedCoords = [...visited]
-    .map((str) => str.split('-').slice(0, 2).map(Number))
+    .map(parseRecordWithDir)
     .filter(([row, col]) => !(row === startRow && col === startCol));
 
   return visitedCoords.reduce((count, [ri, ci]) => {
-    matrix[ri][ci] = '0';
-    count += visitLoop([startRow, startCol], 'up', matrix, new Set());
-    matrix[ri][ci] = '.';
+    count += loopCount([startRow, startCol], 'up', block(ri, ci, matrix), new Set());
     return count;
   }, 0);
 };

@@ -4,18 +4,18 @@ import { split } from '@lib/string';
 
 const reverse = (arg: string) => arg.split('').toReversed().join('');
 
-const columns = (data: string[]) =>
+const columns = (data: readonly string[]) =>
   data.reduce(
     (cols, line) => cols.map((col, i) => col.concat(line[i])),
     Array.from({ length: data[0].length }, () => ''),
   );
 
-const diagonalForward = (data: string[], colIndex: number, length: number) =>
+const diagonalForward = (data: readonly string[], colIndex: number, length: number) =>
   range(0, length)
     .map((i) => data[i][colIndex + i])
     .join('');
 
-const diagonalBackward = (data: string[], colIndex: number, length: number) =>
+const diagonalBackward = (data: readonly string[], colIndex: number, length: number) =>
   range(0, length)
     .map((i) => data[i][colIndex - i])
     .join('');
@@ -27,7 +27,7 @@ const occurences = (line: string) => (word: string) =>
     return count + (slice === word || reverse(slice) === word ? 1 : 0);
   }, 0);
 
-const searchLines = (lines: string[]) => (word: string) =>
+const searchLines = (lines: readonly string[]) => (word: string) =>
   lines.reduce((count, line) => count + occurences(line)(word), 0);
 
 export const part1 = (data: string) => {

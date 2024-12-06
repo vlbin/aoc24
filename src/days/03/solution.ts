@@ -10,25 +10,30 @@ const isValidMul = (mul: string) => mul.indexOf('(') === 3 && readArgs(mul).ever
 
 const evalMul = (mul: string) => readArgs(mul).reduce((acc, curr) => acc * curr, 1);
 
-const parseInstr = (instr: string, startIndex: number, seq: string, muls: string[]): [string[], string] => {
+const parseInstr = (
+  instr: string,
+  startIndex: number,
+  seq: string,
+  muls: readonly string[],
+): [readonly string[], string] => {
   const offset = startIndex + instr.length + 1;
   const endIndex = seq.slice(startIndex + 'mul'.length + 1).indexOf(')') + offset + 1;
   const slice = seq.slice(startIndex, endIndex);
   return slice && isValidMul(slice) ? [[...muls, slice], seq.slice(endIndex)] : [muls, seq.slice(4)];
 };
 
-const parseInstrs = (muls: string[], seq: string): string[] => {
+const parseInstrs = (muls: readonly string[], seq: string): readonly string[] => {
   const nextMul = findNext('mul')(seq);
   return nextMul > -1 ? parseInstrs(...parseInstr('mul', nextMul, seq, muls)) : muls;
 };
 
 const parseMulsWithInterrupt = (
-  muls: string[],
+  muls: readonly string[],
   seq: string,
   isEnabled: boolean,
   interruptor: string,
   resetter: string,
-): string[] => {
+): readonly string[] => {
   const nextMul = findNext('mul')(seq);
   const nextInt = findNext(interruptor)(seq);
 

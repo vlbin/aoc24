@@ -11,7 +11,7 @@ export const getRules = (_rules: string) =>
       };
     }, {});
 
-const middleSum = (lines: number[][]) => sum(lines.map((line) => line[Math.floor(line.length / 2)]));
+const middleSum = (lines: ReadonlyArray<number[]>) => sum(lines.map((line) => line[Math.floor(line.length / 2)]));
 
 export const part1 = (data: string) => {
   const [_rules, _updates] = data.split('\n\n');

@@ -32,10 +32,10 @@ export const take =
 
 export const sum = reduce<number, number>((acc, curr) => acc + curr, 0);
 
-export const zip = <A, B>(as: Array<A>, bs: Array<B>) =>
+export const zip = <A, B>(as: ReadonlyArray<A>, bs: ReadonlyArray<B>) =>
   as.slice(0, Math.min(as.length, bs.length)).map((a, i) => [a, bs[i]]);
 
-export const pairs = <A>(as: Array<A>) => as.slice(1).map((a, i) => [as[i], a]);
+export const pairs = <A>(as: ReadonlyArray<A>) => as.slice(1).map((a, i) => [as[i], a]);
 
 export const head = <T>(items: ReadonlyArray<T>) => items[0];
 
@@ -54,3 +54,11 @@ export const count = <T>(key: T) =>
 export const deleteAt =
   (index: number) =>
   <T>(items: ReadonlyArray<T>) => [...items.slice(0, index), ...items.slice(index + 1)];
+
+export const updateAt =
+  (index: number) =>
+  <T>(fn: (el: T) => T) =>
+  (items: ReadonlyArray<T>) =>
+    index < 0 || index > items.length - 1
+      ? items
+      : [...items.slice(0, index), fn(items[index]), ...items.slice(index + 1)];
