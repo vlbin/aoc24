@@ -3,32 +3,32 @@ import { updateAt } from '@lib/grid';
 import { grid } from '@lib/parsing';
 import type { Grid } from '@lib/types';
 
-const directionMap = {
+const directions = ['up', 'right', 'down', 'left'] as const;
+
+type Direction = (typeof directions)[number];
+
+const directionMap: Record<Direction, [number, number]> = {
   up: [-1, 0],
   right: [0, 1],
   down: [1, 0],
   left: [0, -1],
-} as const;
+};
 
-type Direction = typeof directionMap;
-
-const directions: (keyof Direction)[] = ['up', 'right', 'down', 'left'];
-
-const getNextDir = (direction: keyof Direction) => directions[(directions.indexOf(direction) + 1) % 4];
+const getNextDir = (direction: Direction) => directions[(directions.indexOf(direction) + 1) % 4];
 
 const createRecord = (currentPos: Readonly<[number, number]>) => currentPos.join('-');
 
-const createRecordWithDir = (currentPos: Readonly<[number, number]>, direction: keyof Direction) =>
+const createRecordWithDir = (currentPos: Readonly<[number, number]>, direction: Direction) =>
   [...currentPos, direction].join('-');
 
 const parseRecordWithDir = (record: string) => record.split('-').slice(0, 2).map(Number);
 
-const isLooping = (pos: Readonly<[number, number]>, direction: keyof Direction, visited: ReadonlySet<string>) =>
+const isLooping = (pos: Readonly<[number, number]>, direction: Direction, visited: ReadonlySet<string>) =>
   visited.has(createRecordWithDir(pos, direction));
 
 const visitedTiles = (
   [row, col]: Readonly<[number, number]>,
-  direction: keyof Direction,
+  direction: Direction,
   matrix: Grid<string>,
   visited: Readonly<Set<string>>,
 ): Set<string> => {
@@ -45,24 +45,28 @@ const visitedTiles = (
 
 const loopCount = (
   [row, col]: Readonly<[number, number]>,
-  direction: keyof Direction,
+  direction: Direction,
   matrix: Grid<string>,
   visited: Readonly<Set<string>>,
 ): number => {
   const [rowMod, colMod] = directionMap[direction];
   const [nextRow, nextCol] = [row + rowMod, col + colMod];
-  const block = matrix[nextRow]?.[nextCol];
+  const nextTile = matrix[nextRow]?.[nextCol];
 
-  return isLooping([row, col], direction, visited)
-    ? 1
-    : block
-      ? block === '#' || block === '0'
-        ? loopCount([row, col], getNextDir(direction), matrix, visited)
-        : loopCount([nextRow, nextCol], direction, matrix, visited.add(createRecordWithDir([row, col], direction)))
-      : 0;
+  if (!nextTile) {
+    return 0;
+  }
+
+  if (isLooping([row, col], direction, visited)) {
+    return 1;
+  }
+
+  return nextTile === '#'
+    ? loopCount([row, col], getNextDir(direction), matrix, visited)
+    : loopCount([nextRow, nextCol], direction, matrix, visited.add(createRecordWithDir([row, col], direction)));
 };
 
-const block = (ri: number, ci: number, matrix: Grid<string>) => updateAt(ri, ci)(() => '0')(matrix);
+const matrixWithBlock = (ri: number, ci: number, matrix: Grid<string>) => updateAt(ri, ci)(() => '#')(matrix);
 
 export const part1 = (data: string) => {
   const matrix = grid(data);
@@ -83,7 +87,7 @@ export const part2 = (data: string) => {
     .filter(([row, col]) => !(row === startRow && col === startCol));
 
   return visitedCoords.reduce((count, [ri, ci]) => {
-    count += loopCount([startRow, startCol], 'up', block(ri, ci, matrix), new Set());
+    count += loopCount([startRow, startCol], 'up', matrixWithBlock(ri, ci, matrix), new Set());
     return count;
   }, 0);
 };
