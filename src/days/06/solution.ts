@@ -14,16 +14,18 @@ const visit = (
   currentPos: [number, number],
   direction: keyof Direction,
   matrix: string[][],
-  visited: number[][],
-): number[][] => {
+  visited: Set<string>,
+): Set<string> => {
+  console.log(currentPos, direction);
+
   const [nextRow, nextCol] = [currentPos[0] + directions[direction][0], currentPos[1] + directions[direction][1]];
   const block = matrix[nextRow]?.[nextCol];
 
   return block
-    ? block === '.'
-      ? visit([nextRow, nextCol], direction, matrix, [...visited, currentPos])
-      : visit(currentPos, nextDir[(nextDir.indexOf(direction) + 1) % 4], matrix, [...visited])
-    : visited;
+    ? block === '#'
+      ? visit(currentPos, nextDir[(nextDir.indexOf(direction) + 1) % 4], matrix, visited)
+      : visit([nextRow, nextCol], direction, matrix, visited.add(currentPos.join('-')))
+    : visited.add(currentPos.join('-'));
 };
 
 export const part1 = (data: string) => {
@@ -31,7 +33,7 @@ export const part1 = (data: string) => {
   const row = matrix.findIndex((row) => row.some((char) => char === '^'));
   const col = matrix[row].findIndex((char) => char === '^');
 
-  return visit([row, col], 'up', matrix, []).length;
+  return visit([row, col], 'up', matrix, new Set()).size;
 };
 
 export const part2 = (data: string) => {};
