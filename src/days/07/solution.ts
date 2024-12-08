@@ -1,55 +1,37 @@
-import { range } from '@lib/array';
+import type { BinaryFunction } from '@lib/types';
+type NumericOp = BinaryFunction<number, number, number>;
 
-const add = (a: number, b: number) => a + b;
-const mul = (a: number, b: number) => a * b;
-const concat = (a: number, b: number) => Number(`${a}${b}`);
+const add: NumericOp = (a: number, b: number) => a + b;
+const mul: NumericOp = (a: number, b: number) => a * b;
+const concat: NumericOp = (a: number, b: number) => Number(`${a}${b}`);
 
 type OpNode = {
   value: number;
-  left: OpNode | null;
-  right: OpNode | null;
-  center: OpNode | null;
+  children?: OpNode[];
 };
 
-const addNum = (num: number, node: OpNode): OpNode => {
+const addNum = (num: number, node: Readonly<OpNode>, ops: ReadonlyArray<NumericOp>): OpNode => {
   return {
     value: node.value,
-    left: node.left ? addNum(num, node.left) : { value: mul(node.value, num), left: null, right: null, center: null },
-    right: node.right
-      ? addNum(num, node.right)
-      : { value: add(node.value, num), left: null, right: null, center: null },
-    center: node.center
-      ? addNum(num, node.center)
-      : { value: concat(node.value, num), left: null, right: null, center: null },
+    children: node.children
+      ? node.children.map((child) => addNum(num, child, ops))
+      : ops.map((op) => ({ value: op(node.value, num) })),
   };
 };
 
-const buildOpTree = ([num, ...nums]: number[], root: OpNode): OpNode => {
-  return num === undefined ? root : buildOpTree(nums, addNum(num, root));
+const buildOpTree = (
+  [num, ...nums]: ReadonlyArray<number>,
+  root: Readonly<OpNode>,
+  ops: ReadonlyArray<NumericOp>,
+): OpNode => {
+  return num === undefined ? root : buildOpTree(nums, addNum(num, root, ops), ops);
 };
 
-const getLeaves = (root: OpNode, leaves: number[] = []): number[] => {
-  const left = root.left;
-  const right = root.right;
-  const center = root.center;
-
-  const leftLeaves = left ? getLeaves(left, leaves) : [root.value];
-  const rightLeaves = right ? getLeaves(right, leaves) : [root.value];
-  const centerLeaves = center ? getLeaves(center, leaves) : [root.value];
-
-  return [...leftLeaves, ...rightLeaves];
+const printTree = ({ value, children }: Readonly<OpNode>): number[] => {
+  return [...(children ? children.flatMap(printTree) : [value])];
 };
 
-const printTree = ({ value, left, right, center }: OpNode): number[] => {
-  return [
-    ...(left === null ? [value] : []),
-    ...(left ? printTree(left) : []),
-    ...(right ? printTree(right) : []),
-    ...(center ? printTree(center) : []),
-  ];
-};
-
-export const part1 = (data: string) => {
+const calibrationResult = (data: string, ops: ReadonlyArray<NumericOp>) => {
   const equations = data
     .split('\n')
     .map((eq) => eq.split(':'))
@@ -57,7 +39,7 @@ export const part1 = (data: string) => {
 
   const trees = equations.map(([ans, [num, ...nums]]) => [
     ans,
-    buildOpTree(nums, { value: num, left: null, right: null, center: null }),
+    buildOpTree(nums, { value: num }, ops),
   ]) as ReadonlyArray<[number, OpNode]>;
 
   return trees
@@ -67,16 +49,8 @@ export const part1 = (data: string) => {
       return matching || 0;
     })
     .reduce((sum, leaf) => (sum += leaf), 0);
-
-  // const maxCombos = Math.max(...equations.map(([_, nums]) => nums.length)) - 1;
-
-  // // console.log(combos);
-
-  // return equations.map(([ans, nums]) => {
-  //   const combs = range(0, nums.length);
-  //   const evals = combs.map((comb) => solve(nums, comb));
-  //   return evals;
-  // });
 };
 
-export const part2 = (data: string) => {};
+export const part1 = (data: string) => calibrationResult(data, [add, mul]);
+
+export const part2 = (data: string) => calibrationResult(data, [add, mul, concat]);
