@@ -2,118 +2,71 @@ import { range } from '@lib/array';
 
 const add = (a: number, b: number) => a + b;
 const mul = (a: number, b: number) => a * b;
+const concat = (a: number, b: number) => Number(`${a}${b}`);
 
-/*
-
-0 = mul
-1 = add
-
-00 = mul mul = 0
-01 = mul add = 1
-10 = add mul = 2
-11 = add add = 3
-
-000 = mul mul mul = 0
-001 = mul mul add = 1
-001 = mul mul add = 1
-
-*/
-
-const ops = [mul, add];
-
-const fromBin = (bits: number[]) =>
-  bits.reduce((tot, bit, idx, bits) => {
-    const pos = bits.length - idx - 1;
-    return tot + Math.pow(2, pos) * bit;
-  }, 0);
-
-const toBin = (num: number, places: number, rest: number[] = []): string => {
-  const val = Math.floor(num / 2);
-  const rem = num % 2;
-
-  return val === 0
-    ? [...rest, rem].toReversed().join('').padStart(places, '0')
-    : toBin(val, places, [...rest, num % 2]);
+type OpNode = {
+  value: number;
+  left: OpNode | null;
+  right: OpNode | null;
+  center: OpNode | null;
 };
 
-/*
-
-6 = 110
-
-6 / 2 = 3 (0)
-3 / 2 = 1 (1)
-1 / 2 = 0 (1)
-
-
-
-*/
-
-const solve = ([first, ...nums]: number[], comb: number) => {
-  // console.log(comb, nums);
-
-  return nums.reduce((tot, num, idx) => {
-    return tot;
-  }, first);
+const addNum = (num: number, node: OpNode): OpNode => {
+  return {
+    value: node.value,
+    left: node.left ? addNum(num, node.left) : { value: mul(node.value, num), left: null, right: null, center: null },
+    right: node.right
+      ? addNum(num, node.right)
+      : { value: add(node.value, num), left: null, right: null, center: null },
+    center: node.center
+      ? addNum(num, node.center)
+      : { value: concat(node.value, num), left: null, right: null, center: null },
+  };
 };
 
-const combos = (places: number) => {
-  const lines = range(0, Math.pow(2, places));
-
-  return lines.map((line, i) => {
-    return toBin(i, places)
-      .split('')
-      .map((val) => ops[Number(val)]);
-  });
-
-  console.log(lines);
-
-  const placeList = range(0, Math.pow(2, places - 1)).map((line) => range(0, places));
-  return placeList;
+const buildOpTree = ([num, ...nums]: number[], root: OpNode): OpNode => {
+  return num === undefined ? root : buildOpTree(nums, addNum(num, root));
 };
 
-/*
-[mul] 0
-[add] 1
+const getLeaves = (root: OpNode, leaves: number[] = []): number[] => {
+  const left = root.left;
+  const right = root.right;
+  const center = root.center;
 
+  const leftLeaves = left ? getLeaves(left, leaves) : [root.value];
+  const rightLeaves = right ? getLeaves(right, leaves) : [root.value];
+  const centerLeaves = center ? getLeaves(center, leaves) : [root.value];
 
-[0, 0]
-[0, 1]
-[1, 0]
-[1, 1]
+  return [...leftLeaves, ...rightLeaves];
+};
 
-[0, 0, 0]
-[0, 0, 1]
-[0, 1, 0]
-[1, 0, 0]
-
-
-[mul,mul] 0 
-[mul,add] 1
-[add,mul] 2
-[add,add] 3
-
-
-
-
-
-*/
+const printTree = ({ value, left, right, center }: OpNode): number[] => {
+  return [
+    ...(left === null ? [value] : []),
+    ...(left ? printTree(left) : []),
+    ...(right ? printTree(right) : []),
+    ...(center ? printTree(center) : []),
+  ];
+};
 
 export const part1 = (data: string) => {
-  // console.log(toBin(1)); // 001
-  // console.log(toBin(2)); // 010
-  // console.log(toBin(3)); // 011
-  // console.log(toBin(4)); // 100
-  // console.log(toBin(5)); // 101
-  // console.log(toBin(6)); // 110
-  // console.log(toBin(6)); // 110
+  const equations = data
+    .split('\n')
+    .map((eq) => eq.split(':'))
+    .map(([ans, nums]) => [Number(ans), nums.trim().split(' ').map(Number)]) as ReadonlyArray<[number, number[]]>;
 
-  console.log(combos(3));
-  // console.log(combos(2));
+  const trees = equations.map(([ans, [num, ...nums]]) => [
+    ans,
+    buildOpTree(nums, { value: num, left: null, right: null, center: null }),
+  ]) as ReadonlyArray<[number, OpNode]>;
 
-  // const equations = data
-  //   .split('\n')
-  //   .map((eq) => eq.split(':'))
-  //   .map(([ans, nums]) => [Number(ans), nums.trim().split(' ').map(Number)]) as ReadonlyArray<[number, number[]]>;
+  return trees
+    .map(([ans, tree]) => {
+      const leaves = printTree(tree);
+      const matching = leaves.find((leaf) => leaf === ans);
+      return matching || 0;
+    })
+    .reduce((sum, leaf) => (sum += leaf), 0);
 
   // const maxCombos = Math.max(...equations.map(([_, nums]) => nums.length)) - 1;
 
