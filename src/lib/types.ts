@@ -5,3 +5,5 @@ export interface Mappable<T> {
 export type Tuple<A, B = A> = [A, B];
 
 export type Grid<T> = ReadonlyArray<ReadonlyArray<T>>;
+
+export type Coordinate<T> = [number, number, T];

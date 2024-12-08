@@ -1,11 +1,10 @@
 import { range } from '@lib/array';
+import { size } from '@lib/coordinates';
 import { coords } from '@lib/parsing';
+import type { Coordinate } from '@lib/types';
 
-export const part1 = (data: string) => {
-  const grid = coords(data);
-  const nRows = data.split('\n').map((line) => line.length).length;
-  const nCols = data.split('\n').find((line) => line.length)?.length ?? 0;
-  const antennaLocations = grid.reduce<Record<string, [number, number][]>>((acc, [ri, ci, el]) => {
+const antennas = (map: ReadonlyArray<Coordinate<string>>) =>
+  map.reduce<Record<string, [number, number][]>>((acc, [ri, ci, el]) => {
     return el === '.'
       ? acc
       : {
@@ -14,8 +13,13 @@ export const part1 = (data: string) => {
         };
   }, {});
 
+export const part1 = (data: string) => {
+  const map = coords(data);
+  const [nRows, nCols] = size(map);
+  const locations = antennas(map);
+
   return new Set(
-    Object.values(antennaLocations)
+    Object.values(locations)
       .flatMap((locations) => {
         const pairs = locations
           .flatMap((a) => locations.map((b) => [a, b]))
@@ -37,20 +41,12 @@ export const part1 = (data: string) => {
 };
 
 export const part2 = (data: string) => {
-  const grid = coords(data);
-  const nRows = data.split('\n').filter((l) => l.length).length;
-  const nCols = data.split('\n').find((line) => line.length)?.length ?? 0;
-  const antennaLocations = grid.reduce<Record<string, [number, number][]>>((acc, [ri, ci, el]) => {
-    return el === '.'
-      ? acc
-      : {
-          ...acc,
-          [el]: (acc[el] || []).concat([[ri, ci]]),
-        };
-  }, {});
+  const map = coords(data);
+  const [nRows, nCols] = size(map);
+  const locations = antennas(map);
 
   return new Set(
-    Object.values(antennaLocations)
+    Object.values(locations)
       .flatMap((locations) => {
         const pairs = locations
           .flatMap((a) => locations.map((b) => [a, b]))
