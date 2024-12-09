@@ -1,5 +1,5 @@
 import { filter, length, map, range, tail, zip } from '@lib/array';
-import { numbers } from '@lib/parsing';
+import { spacedNumbers } from '@lib/parsing';
 import { pipe } from '@lib/pipe';
 import { split } from '@lib/string';
 
@@ -13,7 +13,7 @@ const isValid = (report: readonly number[]): boolean => createPairs(report).ever
 const isValidRecurse = (report: readonly number[]): boolean =>
   range(0, report.length).some((i) => isValid(report.toSpliced(i, 1)));
 
-const parse = pipe(split('\n'), map(numbers));
+const parse = pipe(split('\n'), map(spacedNumbers));
 
 export const part1 = pipe(parse, filter(isValid), length);
 
