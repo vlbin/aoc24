@@ -1,4 +1,6 @@
+import { count, map, sum } from '@lib/array';
 import { coords } from '@lib/parsing';
+import { pipe } from '@lib/pipe';
 import type { Coordinate } from '@lib/types';
 
 type Coord = Coordinate<string>;
@@ -36,9 +38,7 @@ const buildTree = (path: ReadonlyArray<Coord>, node: Readonly<Node>): Node => {
     : node;
 };
 
-const printTree = ({ value, children, row, col }: Readonly<Node>): Omit<Node, 'children'>[] => {
-  return [...(children.length ? children.flatMap(printTree) : [{ value, row, col }])];
-};
+const printTree = (node: Readonly<Node>): Node[] => (node.children.length ? node.children.flatMap(printTree) : [node]);
 
 export const part1 = (data: string) => {
   const map = coords(data);
@@ -59,12 +59,19 @@ export const part1 = (data: string) => {
 };
 
 export const part2 = (data: string) => {
-  const map = coords(data);
-  const trailHeads = findTrailHeads(map);
+  const trailMap = coords(data);
+  const trailHeads = findTrailHeads(trailMap);
 
   return trailHeads.reduce((tot, head) => {
-    const tree = buildTree(map, head);
+    const tree = buildTree(trailMap, head);
 
-    return tot + printTree(tree).filter((end) => end.value === 9).length;
+    return (
+      tot +
+      pipe(
+        printTree,
+        map((end) => end.value),
+        count(9),
+      )(tree)
+    );
   }, 0);
 };
