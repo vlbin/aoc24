@@ -43,6 +43,28 @@ const compress = (
   return compress(blocks, reordered.concat(value), idx + 1, targetLength);
 };
 
+const reorder = (blocks: ReadonlyArray<string[]>, idx: number, moved: Set<string>) => {
+  if (idx < 0) {
+    return blocks;
+  }
+  const block = blocks[idx];
+  const firstFitting = blocks.findIndex((el, idx2) => el[0] === '.' && el.length >= block.length && idx2 < idx);
+
+  if (block.includes('.') || firstFitting === -1 || moved.has(block[0]))
+    return reorder(blocks, idx - 1, moved.add(block[0]));
+
+  const freeLength = blocks[firstFitting].length;
+  const padding = range(0, freeLength - block.length).map((_) => '.');
+
+  const withBlock = updateAt(firstFitting)(() => block)(blocks);
+  const withDots = updateAt(idx)(() => replicate('.', block.length))(withBlock);
+  const withPadding = padding.length
+    ? [...withDots.slice(0, firstFitting + 1), padding, ...withDots.slice(firstFitting + 1)]
+    : withDots;
+
+  return reorder(withPadding, idx - 1, moved.add(block[0]));
+};
+
 export const part1 = (data: string) => {
   const fileblocks = blocks(data.split('')).map;
 
@@ -56,20 +78,19 @@ export const part1 = (data: string) => {
 export const part2 = (data: string) => {
   const fileblocks = blocksGrouped(data.split('')).map.filter((group) => group.length);
 
-  const reversed = fileblocks.toReversed();
-  const reordered = reversed.reduce((reordered, group) => {
-    const firstFitting = fileblocks.findIndex((free) => free[0] === '.' && free.length >= group.length);
+  console.log(fileblocks.flat());
 
-    if (firstFitting === -1) {
-      return reordered;
-    }
+  const reversed = reorder(fileblocks, fileblocks.length - 1, new Set()).flat();
 
-    return updateAt(firstFitting)(() => group.join('').padEnd(reordered[firstFitting].length, '.').split(''))(
-      reordered,
-    );
-  }, fileblocks as string[][]);
+  console.log(
+    reversed.slice(0, 60).reduce((acc, el, idx) => {
+      if (el !== '.') {
+        console.log(['id', Number(el), 'pos', idx, 'acc', acc + Number(el) * idx]);
+      }
 
-  console.log(reordered);
+      return el === '.' ? acc : acc + Number(el) * idx;
+    }, 0),
+  );
 
-  return;
+  return reversed.reduce((acc, el, idx) => (el === '.' ? acc : acc + Number(el) * idx), 0);
 };
