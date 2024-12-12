@@ -1,4 +1,4 @@
-import { count, map, sum } from '@lib/array';
+import { count, map } from '@lib/array';
 import { coords } from '@lib/parsing';
 import { pipe } from '@lib/pipe';
 import type { Coordinate } from '@lib/types';
