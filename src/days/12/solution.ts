@@ -1,12 +1,9 @@
-import { coords, grid } from '@lib/parsing';
-import type { Coordinate } from '@lib/types';
+import { updateAt } from '@lib/array';
+import { CoordMap } from '@lib/map';
 
-type Plot = Coordinate<{
-  value: string;
-  inCluster: boolean;
-}>;
-type Cluster = ReadonlyArray<Plot>;
-type FarmMap = ReadonlyArray<ReadonlyArray<string>>;
+interface Plot {
+  el: string;
+}
 
 const directions = {
   west: [0, -1],
@@ -15,57 +12,83 @@ const directions = {
   south: [1, 0],
 };
 
-const getAdjacentPlots = (plot: Plot, farmMap: FarmMap): Cluster => {
-  const [r, c, val] = plot;
+const getAdjacentPlots = (key: string, value: Readonly<Plot>, land: ReadonlyMap<string, Plot>) => {
+  const [r1, c1] = CoordMap.fromHash(key);
 
   return Object.values(directions)
-    .map(([r_, c_]) => {
-      const adjacent = farmMap[r + r_]?.[c + c_];
+    .map(([r2, c2]) => {
+      const adjKey = CoordMap.hash(r1 + r2, c1 + c2);
+      const adjacent = land.get(adjKey);
 
-      const coord = [r + r_, c + c_, { value: val, inCluster: true }];
-
-      return adjacent && adjacent === val.value && !val.inCluster ? coord : [];
+      return adjacent && adjacent.el === value.el ? [adjKey, adjacent] : undefined;
     })
-    .filter((arr) => arr.length) as Plot[];
+    .filter(Boolean) as [string, Plot][];
 };
 
-const expandCluster = (cluster: Cluster, farm: FarmMap): Cluster => {
-  const lastSpot = cluster[cluster.length - 1];
-
-  const adjacent = getAdjacentPlots(lastSpot, farm);
-  if (adjacent.length) {
-    return expandCluster([...cluster, ...adjacent], farm);
-  } else {
-    return cluster;
+const dfs = (
+  key: string,
+  values: ReadonlyArray<string>,
+  adjacencyMap: Readonly<Map<string, string[]>>,
+  visited: Readonly<Set<string>>,
+  unvisited: Readonly<Set<string>>,
+): string[] => {
+  if (visited.has(key)) {
+    return [];
   }
+
+  visited.add(key);
+  unvisited.delete(key);
+
+  return [
+    key,
+    ...values.flatMap((value) => dfs(value, adjacencyMap.get(value) || [], adjacencyMap, visited, unvisited)),
+  ];
 };
 
-const buildClusters = (clusters: Cluster[], farm: Cluster, farmMap: FarmMap) => {
-  const startingPoint = farm.find(
-    ([r1, c1, v1]) =>
-      !clusters.some((cluster) => cluster.find(([r2, c2, v2]) => r1 === r2 && c1 === c2 && v1.value === v2.value)),
-  );
+const buildClusters = (
+  clusters: Readonly<Set<string>[]>,
+  adjacencyMap: Readonly<Map<string, string[]>>,
+  unvisited: Readonly<Set<string>>,
+) => {
+  const nextUnvisited = unvisited.keys().next().value;
 
-  if (!startingPoint) {
+  if (!nextUnvisited) {
     return clusters;
   }
 
-  const cluster = expandCluster([startingPoint], farmMap);
-  return buildClusters([...clusters, cluster], farm, farmMap);
+  const clusterForKey = dfs(nextUnvisited, adjacencyMap.get(nextUnvisited) || [], adjacencyMap, new Set(), unvisited);
+
+  return buildClusters([...clusters, new Set(clusterForKey)], adjacencyMap, unvisited);
 };
 
 export const part1 = (data: string) => {
-  const farmMap = grid(data);
-  const farm = coords(data).map(([r, c, v]) => [
-    r,
-    c,
-    {
-      value: v,
-      inCluster: false,
-    },
-  ]) as Plot[];
+  const map = CoordMap.from(data, (el) => ({
+    el: el,
+  }));
 
-  return buildClusters([], farm, farmMap);
+  const mapEntries = Array.from(map);
+
+  const withAdjacent = mapEntries.reduce<Map<string, string[]>>(
+    (adjMap, [key, value]) =>
+      adjMap.set(
+        key,
+        getAdjacentPlots(key, value, map).map((x) => x[0]),
+      ),
+    new Map(),
+  );
+
+  const entries = Array.from(withAdjacent.entries());
+  const unvisited = new Set(Array.from(withAdjacent.keys()));
+
+  const fenceMap = entries.reduce<Map<string, number>>((acc, [key, values]) => {
+    return acc.set(key, 4 - values.length);
+  }, new Map());
+
+  const clusters = buildClusters([], withAdjacent, unvisited);
+
+  return clusters.reduce((sum, cluster) => {
+    return sum + cluster.size * Array.from(cluster).reduce((sum, el) => sum + (fenceMap.get(el) || 0), 0);
+  }, 0);
 };
 
 export const part2 = (data: string) => {};
