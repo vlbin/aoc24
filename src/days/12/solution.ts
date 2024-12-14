@@ -1,4 +1,3 @@
-import { updateAt } from '@lib/array';
 import { CoordMap } from '@lib/map';
 
 interface Plot {
