@@ -2,12 +2,13 @@ const solve = (xt: number, yt: number, x1: number, x2: number, y1: number, y2: n
   const b = (x1 * yt - y1 * xt) / (y2 * x1 - x2 * y1);
   const a = (xt - b * x2) / x1;
 
-  return Math.floor(a) === a && Math.floor(b) === b ? [a, b] : null;
+  return Number.isInteger(a) && Number.isInteger(b) ? [a, b] : null;
 };
 
 const parse = (data: string) => {
   return data.split('\n\n').map((equation) => {
     const [eq1, eq2, target] = equation.split('\n');
+
     const [x1, y1] = [eq1.slice(eq1.indexOf('+') + 1, eq1.indexOf(',')), eq1.slice(eq1.lastIndexOf('+') + 1)].map(
       Number,
     );

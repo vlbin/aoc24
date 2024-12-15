@@ -25,7 +25,7 @@
     "noPropertyAccessFromIndexSignature": false,
 
     "paths": {
-      "@lib/*": ["./src/lib/*"]
+      "@fp-lib/*": ["./src/fp-lib/*"]
     }
   }
 }
